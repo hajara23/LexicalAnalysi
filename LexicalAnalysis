@@ -1,0 +1,199 @@
+package lex; 
+import java.io.*;
+
+
+public class LexicalAnalysis{
+	public static void main(String [] args) throws IOException {
+	
+		lex lexAna = new lex();
+	       //FileInputStream instr = null;
+	       FileInputStream f = new FileInputStream("externalFile.java");
+	       lexAna.input = f;
+	       int c;
+	       if((c = lexAna.input.read()) != -1) {
+	           System.out.println("Cannot open externalFile.java");
+	       }else{
+	           lexAna.getCharacter();
+	           do{
+	               lexAna.lex();
+	           }while(lexAna.nextTok != -1);
+	       }
+	       System.out.println("All done parsing!");
+	}
+}
+class lex{
+	int characterClass;
+	char [] lex = new char[100]; 
+	char nextCharacter; 
+	int nextLex; 
+	int tok; 
+	int nextTok; 
+	int file_pointer; 
+	//insert the damn file!! 
+	FileInputStream input = null; 
+	
+	//character classes!!!! 
+	final int LETT = 0; 
+	final int DIG = 1; 
+	final int UNK = 99; 
+	
+	//token codes!!!!!!! 		
+	final int INT_LIT = 10; 
+	final int IDENT = 11; 
+	final int ASSIGN_OP = 20; 
+	final int ADD_OP = 21;
+	final int SUB_OP = 22;
+	final int MULT_OP = 23;
+    final int DIV_OP = 24;
+	final int LEFT_PAR = 25;
+	final int RIGHT_PAR = 26;
+	final int SEMI_COL = 27;
+	final int COMP_OP_SM = 28;
+	final int COMP_OP_LG = 29;
+	final int COMP_OP_EQ = 30;
+	
+	public int searching(char ch) {
+		switch(ch){
+        case '(' :
+            addCharacter();
+            nextTok = LEFT_PAR;
+            break;
+       
+        case ')' :
+            addCharacter();
+            nextTok = RIGHT_PAR;
+break;
+
+        case '+' :
+            addCharacter();
+            nextTok = ADD_OP;
+        break;
+
+        case '-' :
+            addCharacter();
+            nextTok = SUB_OP;
+        break;
+
+        case '*' :
+            addCharacter();
+            nextTok = MULT_OP;
+break;
+
+        case '/' :
+            addCharacter();
+            nextTok = DIV_OP;
+break;
+
+        case '=' :
+            addCharacter();
+            nextTok = ASSIGN_OP;
+break;
+
+        case ';' :
+            addCharacter();
+            nextTok = SEMI_COL;
+break;
+
+        case '>':
+            addCharacter();
+            nextTok = COMP_OP_LG;
+break;
+
+        case '<' :
+            addCharacter();
+            nextTok = COMP_OP_SM;
+break;
+
+        default :
+            addCharacter();
+            nextTok = -1;
+        //break;          
+    }
+    return nextTok;
+	}
+
+	public void addCharacter(){
+		if(nextLex<= 98) {
+			lex[nextLex++] = nextCharacter; 
+			lex[nextLex]= 0; 
+		}
+		else {
+			System.out.printf("Error - lexeme is too long \n");
+		}
+	}//ends addCharacter method 
+
+	public void getCharacter(){
+		//int file_pointer;
+	       try {
+			if((file_pointer = input.read()) != -1){
+			       if(Character.isLetterOrDigit(file_pointer)){
+			           characterClass = LETT;
+			       }else if(Character.isDigit(file_pointer)){
+			           characterClass = DIG;
+			       }else{
+			           characterClass = UNK;
+			       }
+			   }else{
+			       characterClass = -1;
+			   }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}//ends getCharacter method
+
+	
+	public void getNotBlank() {
+		while(Character.isSpaceChar(file_pointer)){
+	           getCharacter();
+	       }
+	}//ends get no blanks method 
+	
+
+	public int lex() {
+		nextLex = 0;
+	       getNotBlank();
+	       switch(characterClass){
+	           //Parse identifiers
+	           case LETT :
+	               addCharacter();
+	               getCharacter();
+	               while(characterClass == LETT || characterClass == DIG){
+	                   addCharacter();
+	                   getCharacter();
+	               }
+	               nextTok = IDENT;
+	           break;
+	          
+	           // Parse integer 
+	           case DIG :
+	               addCharacter();
+	               getCharacter();
+	               while(characterClass == DIG){
+	                   addCharacter();
+	                   getCharacter();
+	               }
+	               nextTok = INT_LIT;
+	           break;
+	          
+	           // Parentheses and operators
+	           case UNK :
+	               searching((char) file_pointer);
+	               getCharacter();
+	           break;
+	          
+	           /* EOF */
+	           default :
+	               nextTok = -1;
+	               lex[0] = 'E';
+	               lex[1] = 'O';
+	               lex[2] = 'F';
+	               lex[3] = 0;  
+	       } // End of switch
+	       System.out.println("Next token is : " + nextTok + " Next lexeme is " + lex);
+	       return nextTok;
+
+}//end of public lex()
+
+
+}
